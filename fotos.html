@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de Collage</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #eff1ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .collage-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: start;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+            cursor: move;
+            background: #f5f5f5;
+        }
+
+        .photo-item:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-item .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(245, 87, 108, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .photo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .collage-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .photo-item img {
+                height: 150px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Creador de Collage de Fotos</h1>
+        
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">☁️</div>
+                <h2>Arrastra tus fotos aquí</h2>
+                <p>o haz clic para seleccionar archivos</p>
+                <input type="file" id="fileInput" accept="image/*" multiple>
+            </div>
+            <div class="controls">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    📁 Seleccionar Fotos
+                </button>
+                <button class="btn btn-clear" onclick="clearCollage()">
+                    🗑️ Limpiar Todo
+                </button>
+                <button class="btn" onclick="downloadCollage()">
+                    💾 Descargar Collage
+                </button>
+            </div>
+        </div>
+
+        <div class="collage-container" id="collageContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">🖼️</div>
+                <h3>Tu collage está vacío</h3>
+                <p>Sube algunas fotos para comenzar</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const collageContainer = document.getElementById('collageContainer');
+        let photos = [];
+
+        // Click para abrir selector
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Prevenir comportamiento por defecto
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Resaltar área al arrastrar
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.remove('dragover');
+            });
+        });
+
+        // Manejar drop
+        uploadArea.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // Manejar selección de archivos
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            [...files].forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        addPhotoToCollage(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function addPhotoToCollage(src) {
+            const id = Date.now() + Math.random();
+            photos.push({ id, src });
+            renderCollage();
+        }
+
+        function renderCollage() {
+            if (photos.length === 0) {
+                collageContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🖼️</div>
+                        <h3>Tu collage está vacío</h3>
+                        <p>Sube algunas fotos para comenzar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            collageContainer.innerHTML = '';
+            photos.forEach(photo => {
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'photo-item';
+                photoDiv.draggable = true;
+                photoDiv.dataset.id = photo.id;
+                
+                photoDiv.innerHTML = `
+                    <img src="${photo.src}" alt="Foto">
+                    <button class="delete-btn" onclick="deletePhoto(${photo.id})">×</button>
+                `;
+
+                photoDiv.addEventListener('dragstart', handleDragStart);
+                photoDiv.addEventListener('dragover', handleDragOver);
+                photoDiv.addEventListener('drop', handleDrop);
+                photoDiv.addEventListener('dragend', handleDragEnd);
+
+                collageContainer.appendChild(photoDiv);
+            });
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.style.opacity = '0.5';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            return false;
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            if (draggedElement !== this) {
+                const allItems = [...collageContainer.querySelectorAll('.photo-item')];
+                const draggedIndex = allItems.indexOf(draggedElement);
+                const targetIndex = allItems.indexOf(this);
+                
+                const temp = photos[draggedIndex];
+                photos[draggedIndex] = photos[targetIndex];
+                photos[targetIndex] = temp;
+                
+                renderCollage();
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+        }
+
+        function deletePhoto(id) {
+            photos = photos.filter(photo => photo.id !== id);
+            renderCollage();
+        }
+
+        function clearCollage() {
+            if (photos.length === 0) return;
+            if (confirm('¿Estás seguro de que quieres eliminar todas las fotos?')) {
+                photos = [];
+                renderCollage();
+            }
+        }
+
+        function downloadCollage() {
+            if (photos.length === 0) {
+                alert('No hay fotos para descargar. Agrega algunas fotos primero.');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const cols = Math.ceil(Math.sqrt(photos.length));
+            const rows = Math.ceil(photos.length / cols);
+            const imgSize = 300;
+            
+            canvas.width = cols * imgSize;
+            canvas.height = rows * imgSize;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            let loadedImages = 0;
+            photos.forEach((photo, index) => {
+                const img = new Image();
+                img.onload = () => {
+                    const col = index % cols;
+                    const row = Math.floor(index / cols);
+                    ctx.drawImage(img, col * imgSize, row * imgSize, imgSize, imgSize);
+                    
+                    loadedImages++;
+                    if (loadedImages === photos.length) {
+                        const link = document.createElement('a');
+                        link.download = 'mi-collage.png';
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    }
+                };
+                img.src = photo.src;
+            });
+        }
+    </script>
+</body>
+</html>
